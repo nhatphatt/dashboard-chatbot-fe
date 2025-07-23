@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DollarSign } from "lucide-react";
@@ -55,16 +55,16 @@ export default function TuitionPage() {
   const [editingTuition, setEditingTuition] = useState<TuitionFee | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Utility functions
-  const formatCurrency = (amount: number) => {
+  // Utility functions - memoized for performance
+  const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
     }).format(amount);
-  };
+  }, []);
 
-  // API functions
-  const fetchTuitionFees = async () => {
+  // API functions - memoized to prevent unnecessary re-renders
+  const fetchTuitionFees = useCallback(async () => {
     try {
       setError(null);
       const response = await authService.getTuitionFees({
@@ -86,9 +86,15 @@ export default function TuitionPage() {
       setError(errorMessage);
       toast.error("Lỗi tải dữ liệu", { description: errorMessage });
     }
-  };
+  }, [
+    currentPage,
+    pageSize,
+    selectedYear,
+    selectedProgramCode,
+    selectedCampusCode,
+  ]);
 
-  const fetchDropdownData = async () => {
+  const fetchDropdownData = useCallback(async () => {
     try {
       console.log("Fetching dropdown data from new APIs...");
 
@@ -249,9 +255,9 @@ export default function TuitionPage() {
       setPrograms(fallbackPrograms);
       setCampuses(fallbackCampuses);
     }
-  };
+  }, [selectedYear]);
 
-  const fetchComparison = async () => {
+  const fetchComparison = useCallback(async () => {
     if (!selectedProgramCode || selectedProgramCode === "all") return;
 
     try {
@@ -264,96 +270,121 @@ export default function TuitionPage() {
       console.error("Comparison API Error:", error);
       setComparisons([]);
     }
-  };
+  }, [selectedProgramCode, selectedYear]);
 
-  // CRUD functions
-  const handleCreateTuition = async (data: {
-    program_id: string;
-    campus_id: string;
-    year: number;
-    semester_group_1_3_fee: number;
-    semester_group_4_6_fee: number;
-    semester_group_7_9_fee: number;
-  }) => {
-    setIsSubmitting(true);
-    try {
-      await authService.createTuitionRecord(data);
-      toast.success("Tạo học phí thành công!", {
-        description: "Bản ghi học phí đã được tạo.",
-      });
-      setIsCreateDialogOpen(false);
-      fetchTuitionFees();
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Không thể tạo học phí";
-      toast.error("Lỗi tạo học phí", { description: errorMessage });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // CRUD functions - memoized for performance
+  const handleCreateTuition = useCallback(
+    async (data: {
+      program_id: string;
+      campus_id: string;
+      year: number;
+      semester_group_1_3_fee: number;
+      semester_group_4_6_fee: number;
+      semester_group_7_9_fee: number;
+    }) => {
+      setIsSubmitting(true);
+      try {
+        await authService.createTuitionRecord(data);
+        toast.success("Tạo học phí thành công!", {
+          description: "Bản ghi học phí đã được tạo.",
+        });
+        setIsCreateDialogOpen(false);
+        fetchTuitionFees();
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Không thể tạo học phí";
+        toast.error("Lỗi tạo học phí", { description: errorMessage });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [fetchTuitionFees]
+  );
 
-  const handleUpdateTuition = async (
-    id: string,
-    data: {
-      program_id?: string;
-      campus_id?: string;
-      year?: number;
-      semester_group_1_3_fee?: number;
-      semester_group_4_6_fee?: number;
-      semester_group_7_9_fee?: number;
-      is_active?: boolean;
-    }
-  ) => {
-    setIsSubmitting(true);
-    try {
-      await authService.updateTuitionRecord(id, data);
-      toast.success("Cập nhật học phí thành công!", {
-        description: "Bản ghi học phí đã được cập nhật.",
-      });
-      setIsEditDialogOpen(false);
-      setEditingTuition(null);
-      fetchTuitionFees();
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Không thể cập nhật học phí";
-      toast.error("Lỗi cập nhật học phí", { description: errorMessage });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const handleUpdateTuition = useCallback(
+    async (
+      id: string,
+      data: {
+        program_id?: string;
+        campus_id?: string;
+        year?: number;
+        semester_group_1_3_fee?: number;
+        semester_group_4_6_fee?: number;
+        semester_group_7_9_fee?: number;
+        is_active?: boolean;
+      }
+    ) => {
+      setIsSubmitting(true);
+      try {
+        await authService.updateTuitionRecord(id, data);
+        toast.success("Cập nhật học phí thành công!", {
+          description: "Bản ghi học phí đã được cập nhật.",
+        });
+        setIsEditDialogOpen(false);
+        setEditingTuition(null);
+        fetchTuitionFees();
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Không thể cập nhật học phí";
+        toast.error("Lỗi cập nhật học phí", { description: errorMessage });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [fetchTuitionFees]
+  );
 
-  const handleDeleteTuition = async (id: string, programName: string) => {
-    if (
-      !confirm(
-        `Bạn có chắc chắn muốn xóa học phí cho chương trình "${programName}"?`
-      )
-    ) {
-      return;
-    }
+  const handleDeleteTuition = useCallback(
+    async (id: string, programName: string) => {
+      if (
+        !confirm(
+          `Bạn có chắc chắn muốn xóa học phí cho chương trình "${programName}"?`
+        )
+      ) {
+        return;
+      }
 
-    try {
-      await authService.deleteTuitionRecord(id);
-      toast.success("Xóa học phí thành công!", {
-        description: "Bản ghi học phí đã được xóa.",
-      });
-      fetchTuitionFees();
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Không thể xóa học phí";
-      toast.error("Lỗi xóa học phí", { description: errorMessage });
-    }
-  };
+      try {
+        await authService.deleteTuitionRecord(id);
+        toast.success("Xóa học phí thành công!", {
+          description: "Bản ghi học phí đã được xóa.",
+        });
+        fetchTuitionFees();
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Không thể xóa học phí";
+        toast.error("Lỗi xóa học phí", { description: errorMessage });
+      }
+    },
+    [fetchTuitionFees]
+  );
 
-  const handleEditTuition = (tuition: TuitionFee) => {
+  const handleEditTuition = useCallback((tuition: TuitionFee) => {
     setEditingTuition(tuition);
     setIsEditDialogOpen(true);
-  };
+  }, []);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await Promise.all([fetchTuitionFees(), fetchDropdownData()]);
     setIsRefreshing(false);
-  };
+  }, [fetchTuitionFees, fetchDropdownData]);
+
+  // Memoized filtered data for better performance
+  const filteredPrograms = useMemo(() => {
+    if (!searchTerm) return programs;
+    return programs.filter(
+      (program) =>
+        program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        program.code.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [programs, searchTerm]);
+
+  const filteredCampuses = useMemo(() => {
+    return campuses.filter(
+      (campus) => campus.available_programs.codes.length > 0
+    );
+  }, [campuses]);
 
   // Effects
   useEffect(() => {
@@ -363,25 +394,19 @@ export default function TuitionPage() {
       setIsLoading(false);
     };
     loadData();
-  }, [selectedYear]);
+  }, [fetchDropdownData]);
 
   useEffect(() => {
     if (activeTab === "fees") {
       fetchTuitionFees();
     }
-  }, [
-    currentPage,
-    selectedYear,
-    selectedProgramCode,
-    selectedCampusCode,
-    activeTab,
-  ]);
+  }, [fetchTuitionFees, activeTab]);
 
   useEffect(() => {
     if (activeTab === "fees" && tuitionFees.length === 0) {
       fetchTuitionFees();
     }
-  }, [activeTab]);
+  }, [fetchTuitionFees, activeTab, tuitionFees.length]);
 
   useEffect(() => {
     if (selectedProgramCode && selectedProgramCode !== "all") {
@@ -389,7 +414,7 @@ export default function TuitionPage() {
     } else {
       setComparisons([]);
     }
-  }, [selectedProgramCode, selectedYear]);
+  }, [fetchComparison, selectedProgramCode]);
 
   if (isLoading) {
     return (
@@ -424,8 +449,8 @@ export default function TuitionPage() {
           <TuitionFeesTab
             tuitionFees={tuitionFees}
             tuitionMeta={tuitionMeta}
-            programs={programs}
-            campuses={campuses}
+            programs={filteredPrograms}
+            campuses={filteredCampuses}
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             selectedProgramCode={selectedProgramCode}
@@ -450,7 +475,7 @@ export default function TuitionPage() {
         <TabsContent value="comparison">
           <TuitionComparisonTab
             comparisons={comparisons}
-            programs={programs}
+            programs={filteredPrograms}
             selectedProgramCode={selectedProgramCode}
             setSelectedProgramCode={setSelectedProgramCode}
             selectedYear={selectedYear}
@@ -465,8 +490,8 @@ export default function TuitionPage() {
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         onSubmit={handleCreateTuition}
-        programs={programs}
-        campuses={campuses}
+        programs={filteredPrograms}
+        campuses={filteredCampuses}
         isSubmitting={isSubmitting}
         title="Thêm Học Phí Mới"
         submitText="Tạo Học Phí"
@@ -479,8 +504,8 @@ export default function TuitionPage() {
         onSubmit={(data) =>
           editingTuition && handleUpdateTuition(editingTuition.id, data)
         }
-        programs={programs}
-        campuses={campuses}
+        programs={filteredPrograms}
+        campuses={filteredCampuses}
         isSubmitting={isSubmitting}
         title="Chỉnh Sửa Học Phí"
         submitText="Cập Nhật"

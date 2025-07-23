@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -196,12 +197,65 @@ export default function DepartmentsPage() {
     setError("");
 
     try {
+      // First check if department has any programs
+      const programsResponse = await fetch(
+        `https://core-tuyensinh-production.up.railway.app/api/v1/programs?department_code=${deletingDepartment.code}&limit=1&offset=0`
+      );
+
+      if (programsResponse.ok) {
+        const programsData = await programsResponse.json();
+
+        if (programsData.data && programsData.data.length > 0) {
+          // Department has programs, show error
+          const programCount =
+            programsData.meta?.total || programsData.data.length;
+          const errorMessage = `Không thể xóa khoa "${deletingDepartment.name}" vì đang có ${programCount} chương trình thuộc khoa này. Vui lòng xóa hoặc chuyển các chương trình sang khoa khác trước khi xóa khoa.`;
+
+          setError(errorMessage);
+          toast.error("Không thể xóa khoa", {
+            description: `Khoa "${deletingDepartment.name}" đang được sử dụng bởi ${programCount} chương trình.`,
+            duration: 6000,
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // If no programs found, proceed with deletion
       await authService.deleteDepartment(deletingDepartment.id);
       setIsDeleteDialogOpen(false);
       setDeletingDepartment(null);
       await fetchDepartments(currentPage, meta.limit);
+
+      // Show success message
+      setError("");
+      toast.success("Xóa khoa thành công", {
+        description: `Khoa "${deletingDepartment.name}" đã được xóa khỏi hệ thống.`,
+        duration: 3000,
+      });
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Xóa thất bại");
+      const errorMessage =
+        error instanceof Error ? error.message : "Xóa thất bại";
+
+      // Check if error is related to foreign key constraint
+      if (
+        errorMessage.includes("foreign key") ||
+        errorMessage.includes("constraint") ||
+        errorMessage.includes("referenced")
+      ) {
+        const constraintError = `Không thể xóa khoa "${deletingDepartment.name}" vì đang được sử dụng bởi các chương trình khác. Vui lòng xóa hoặc chuyển các chương trình sang khoa khác trước khi xóa khoa.`;
+        setError(constraintError);
+        toast.error("Lỗi ràng buộc dữ liệu", {
+          description: `Khoa "${deletingDepartment.name}" đang được tham chiếu bởi dữ liệu khác.`,
+          duration: 6000,
+        });
+      } else {
+        setError(errorMessage);
+        toast.error("Lỗi xóa khoa", {
+          description: errorMessage,
+          duration: 4000,
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -540,10 +594,25 @@ export default function DepartmentsPage() {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Bạn có chắc chắn?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Hành động này sẽ xóa khoa "{deletingDepartment?.name}". Hành
-                động này không thể hoàn tác.
+              <AlertDialogTitle className="flex items-center space-x-2">
+                <span className="text-red-600">⚠️</span>
+                <span>Xác nhận xóa khoa</span>
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                <p>
+                  Bạn có chắc chắn muốn xóa khoa{" "}
+                  <strong>"{deletingDepartment?.name}"</strong>?
+                </p>
+                <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                  <p className="text-yellow-800 text-sm">
+                    <strong>Lưu ý:</strong> Hệ thống sẽ kiểm tra xem khoa này có
+                    đang được sử dụng bởi các chương trình hay không. Nếu có,
+                    việc xóa sẽ bị từ chối.
+                  </p>
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Hành động này không thể hoàn tác sau khi thực hiện.
+                </p>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -553,7 +622,14 @@ export default function DepartmentsPage() {
                 disabled={isSubmitting}
                 className="bg-red-600 hover:bg-red-700"
               >
-                {isSubmitting ? "Đang xóa..." : "Xóa"}
+                {isSubmitting ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Đang kiểm tra...</span>
+                  </div>
+                ) : (
+                  "Xác nhận xóa"
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

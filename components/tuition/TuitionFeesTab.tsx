@@ -1,4 +1,6 @@
 "use client";
+
+import React from "react";
 import {
   Card,
   CardContent,
@@ -63,7 +65,7 @@ interface TuitionFeesTabProps {
   formatCurrency: (amount: number) => string;
 }
 
-export default function TuitionFeesTab({
+const TuitionFeesTab = React.memo(function TuitionFeesTab({
   tuitionFees,
   tuitionMeta,
   programs,
@@ -398,4 +400,6 @@ export default function TuitionFeesTab({
       </Card>
     </div>
   );
-}
+});
+
+export default TuitionFeesTab;

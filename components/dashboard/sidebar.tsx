@@ -18,8 +18,6 @@ import {
   X,
   Users,
   BarChart3,
-  Settings,
-  HelpCircle,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -28,9 +26,7 @@ import { authService } from "@/lib/auth";
 const navigationGroups = [
   {
     name: "Tổng Quan",
-    items: [
-      { name: "Dashboard", href: "/dashboard", icon: Home },
-    ],
+    items: [{ name: "Dashboard", href: "/dashboard", icon: Home }],
   },
   {
     name: "Quản Lý Dữ Liệu",
@@ -50,13 +46,6 @@ const navigationGroups = [
     items: [
       { name: "Tài Liệu", href: "/dashboard/knowledge", icon: BookOpen },
       { name: "Người Dùng", href: "/dashboard/users", icon: Users },
-    ],
-  },
-  {
-    name: "Hệ Thống",
-    items: [
-      { name: "Cài Đặt", href: "/dashboard/settings", icon: Settings },
-      { name: "Trợ Giúp", href: "/dashboard/help", icon: HelpCircle },
     ],
   },
 ];

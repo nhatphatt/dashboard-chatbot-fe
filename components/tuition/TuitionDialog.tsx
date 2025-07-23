@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ interface TuitionDialogProps {
   initialData?: TuitionFee | null;
 }
 
-export default function TuitionDialog({
+const TuitionDialog = React.memo(function TuitionDialog({
   open,
   onOpenChange,
   onSubmit,
@@ -212,4 +212,6 @@ export default function TuitionDialog({
       </DialogContent>
     </Dialog>
   );
-}
+});
+
+export default TuitionDialog;

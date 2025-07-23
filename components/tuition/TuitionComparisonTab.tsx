@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   Card,
   CardContent,
@@ -16,10 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  TuitionComparison,
-  Program,
-} from "@/lib/auth";
+import { TuitionComparison, Program } from "@/lib/auth";
 
 interface TuitionComparisonTabProps {
   comparisons: TuitionComparison[];
@@ -31,7 +29,7 @@ interface TuitionComparisonTabProps {
   formatCurrency: (amount: number) => string;
 }
 
-export default function TuitionComparisonTab({
+const TuitionComparisonTab = React.memo(function TuitionComparisonTab({
   comparisons,
   programs,
   selectedProgramCode,
@@ -111,7 +109,10 @@ export default function TuitionComparisonTab({
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {comparison.campus_fees.map((campus) => (
-                    <Card key={campus.campus_code} className="border-l-4 border-l-blue-500">
+                    <Card
+                      key={campus.campus_code}
+                      className="border-l-4 border-l-blue-500"
+                    >
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base">
                           {campus.campus_code} - {campus.campus_name}
@@ -120,10 +121,7 @@ export default function TuitionComparisonTab({
                           {campus.city}
                           {campus.discount_percentage &&
                             campus.discount_percentage > 0 && (
-                              <Badge
-                                variant="secondary"
-                                className="ml-2"
-                              >
+                              <Badge variant="secondary" className="ml-2">
                                 Giảm {campus.discount_percentage}%
                               </Badge>
                             )}
@@ -164,25 +162,33 @@ export default function TuitionComparisonTab({
                 {/* Summary Statistics */}
                 <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <div className="text-sm text-gray-600">Học phí thấp nhất</div>
+                    <div className="text-sm text-gray-600">
+                      Học phí thấp nhất
+                    </div>
                     <div className="text-lg font-bold text-blue-600">
                       {formatCurrency(comparison.min_semester_fee)}
                     </div>
                   </div>
                   <div className="text-center p-3 bg-red-50 rounded-lg">
-                    <div className="text-sm text-gray-600">Học phí cao nhất</div>
+                    <div className="text-sm text-gray-600">
+                      Học phí cao nhất
+                    </div>
                     <div className="text-lg font-bold text-red-600">
                       {formatCurrency(comparison.max_semester_fee)}
                     </div>
                   </div>
                   <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <div className="text-sm text-gray-600">Tổng phí thấp nhất</div>
+                    <div className="text-sm text-gray-600">
+                      Tổng phí thấp nhất
+                    </div>
                     <div className="text-lg font-bold text-green-600">
                       {formatCurrency(comparison.min_total_fee)}
                     </div>
                   </div>
                   <div className="text-center p-3 bg-orange-50 rounded-lg">
-                    <div className="text-sm text-gray-600">Tổng phí cao nhất</div>
+                    <div className="text-sm text-gray-600">
+                      Tổng phí cao nhất
+                    </div>
                     <div className="text-lg font-bold text-orange-600">
                       {formatCurrency(comparison.max_total_fee)}
                     </div>
@@ -205,4 +211,6 @@ export default function TuitionComparisonTab({
       )}
     </div>
   );
-}
+});
+
+export default TuitionComparisonTab;
