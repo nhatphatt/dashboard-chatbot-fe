@@ -1,0 +1,491 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DollarSign } from "lucide-react";
+
+// Import tab components
+import {
+  TuitionFeesTab,
+  TuitionComparisonTab,
+  TuitionDialog,
+} from "@/components/tuition";
+
+import {
+  authService,
+  TuitionFee,
+  TuitionResponse,
+  TuitionComparison,
+  Program,
+  Campus,
+} from "@/lib/auth";
+
+export default function TuitionPage() {
+  // Main data states
+  const [tuitionFees, setTuitionFees] = useState<TuitionFee[]>([]);
+  const [tuitionMeta, setTuitionMeta] = useState<
+    TuitionResponse["meta"] | null
+  >(null);
+  const [comparisons, setComparisons] = useState<TuitionComparison[]>([]);
+
+  // Dropdown data
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [campuses, setCampuses] = useState<Campus[]>([]);
+
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProgramCode, setSelectedProgramCode] = useState("all");
+  const [selectedCampusCode, setSelectedCampusCode] = useState("all");
+  const [selectedYear, setSelectedYear] = useState(2025);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  // UI states
+  const [activeTab, setActiveTab] = useState("fees");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // CRUD states
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingTuition, setEditingTuition] = useState<TuitionFee | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Utility functions
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount);
+  };
+
+  // API functions
+  const fetchTuitionFees = async () => {
+    try {
+      setError(null);
+      const response = await authService.getTuitionFees({
+        limit: pageSize,
+        offset: (currentPage - 1) * pageSize,
+        year: selectedYear,
+        program_code:
+          selectedProgramCode !== "all" ? selectedProgramCode : undefined,
+        campus_code:
+          selectedCampusCode !== "all" ? selectedCampusCode : undefined,
+      });
+      setTuitionFees(response.data);
+      setTuitionMeta(response.meta);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Không thể tải dữ liệu học phí";
+      setError(errorMessage);
+      toast.error("Lỗi tải dữ liệu", { description: errorMessage });
+    }
+  };
+
+  const fetchDropdownData = async () => {
+    try {
+      console.log("Fetching dropdown data from new APIs...");
+
+      const [programsResponse, campusesResponse] = await Promise.all([
+        fetch(
+          "https://core-tuyensinh-production.up.railway.app/api/v1/programs?limit=100&offset=0"
+        ),
+        fetch(
+          `https://core-tuyensinh-production.up.railway.app/api/v1/campuses?limit=100&offset=0&year=${selectedYear}`
+        ),
+      ]);
+
+      if (!programsResponse.ok || !campusesResponse.ok) {
+        throw new Error("API request failed");
+      }
+
+      const [programsData, campusesData] = await Promise.all([
+        programsResponse.json(),
+        campusesResponse.json(),
+      ]);
+
+      console.log("Programs API response:", programsData);
+      console.log("Campuses API response:", campusesData);
+
+      // Extract data for dropdowns
+      const programsForDropdown = programsData.data.map((program: any) => ({
+        id: program.id,
+        code: program.code,
+        name: program.name,
+        name_en: program.name_en,
+        department_id: program.department_id,
+        duration_years: program.duration_years,
+        department: program.department,
+      }));
+
+      const campusesForDropdown = campusesData.data.map((campus: any) => ({
+        id: campus.id,
+        code: campus.code,
+        name: campus.name,
+        city: campus.city,
+        address: campus.address,
+        phone: campus.phone,
+        email: campus.email,
+        discount_percentage: campus.discount_percentage,
+        preparation_fees: campus.preparation_fees,
+        available_programs: campus.available_programs,
+      }));
+
+      setPrograms(programsForDropdown);
+      setCampuses(campusesForDropdown);
+
+      console.log("Processed programs for dropdown:", programsForDropdown);
+      console.log("Processed campuses for dropdown:", campusesForDropdown);
+    } catch (error) {
+      console.error("Dropdown data error:", error);
+
+      // Fallback to minimal hardcoded data for dropdowns
+      const fallbackPrograms = [
+        {
+          id: "1",
+          code: "IA",
+          name: "An toàn thông tin",
+          name_en: "Information Assurance",
+          department_id: "1",
+          duration_years: 4,
+          department: {
+            id: "1",
+            code: "IT",
+            name: "Công nghệ thông tin",
+            name_en: "Information Technology",
+          },
+        },
+        {
+          id: "2",
+          code: "DT",
+          name: "Công nghệ ô tô số",
+          name_en: "Digital Automotive Technology",
+          department_id: "1",
+          duration_years: 4,
+          department: {
+            id: "1",
+            code: "IT",
+            name: "Công nghệ thông tin",
+            name_en: "Information Technology",
+          },
+        },
+        {
+          id: "3",
+          code: "FT",
+          name: "Công nghệ tài chính",
+          name_en: "Fintech",
+          department_id: "2",
+          duration_years: 4,
+          department: {
+            id: "2",
+            code: "BUS",
+            name: "Quản trị kinh doanh",
+            name_en: "Business Administration",
+          },
+        },
+      ];
+
+      const fallbackCampuses = [
+        {
+          id: "1",
+          code: "HN",
+          name: "Hà Nội",
+          city: "Hà Nội",
+          address: "Hà Nội",
+          phone: "",
+          email: "",
+          discount_percentage: 0,
+          preparation_fees: {
+            year: 2025,
+            orientation: {
+              fee: 0,
+              is_mandatory: false,
+              max_periods: 0,
+              description: "",
+            },
+            english_prep: {
+              fee: 0,
+              is_mandatory: false,
+              max_periods: 0,
+              description: "",
+            },
+          },
+          available_programs: { count: 0, codes: [] },
+        },
+        {
+          id: "2",
+          code: "HCM",
+          name: "Hồ Chí Minh",
+          city: "Hồ Chí Minh",
+          address: "Hồ Chí Minh",
+          phone: "",
+          email: "",
+          discount_percentage: 0,
+          preparation_fees: {
+            year: 2025,
+            orientation: {
+              fee: 0,
+              is_mandatory: false,
+              max_periods: 0,
+              description: "",
+            },
+            english_prep: {
+              fee: 0,
+              is_mandatory: false,
+              max_periods: 0,
+              description: "",
+            },
+          },
+          available_programs: { count: 0, codes: [] },
+        },
+      ];
+
+      setPrograms(fallbackPrograms);
+      setCampuses(fallbackCampuses);
+    }
+  };
+
+  const fetchComparison = async () => {
+    if (!selectedProgramCode || selectedProgramCode === "all") return;
+
+    try {
+      const response = await authService.getTuitionComparison({
+        program_code: selectedProgramCode,
+        year: selectedYear,
+      });
+      setComparisons(response.data);
+    } catch (error) {
+      console.error("Comparison API Error:", error);
+      setComparisons([]);
+    }
+  };
+
+  // CRUD functions
+  const handleCreateTuition = async (data: {
+    program_id: string;
+    campus_id: string;
+    year: number;
+    semester_group_1_3_fee: number;
+    semester_group_4_6_fee: number;
+    semester_group_7_9_fee: number;
+  }) => {
+    setIsSubmitting(true);
+    try {
+      await authService.createTuitionRecord(data);
+      toast.success("Tạo học phí thành công!", {
+        description: "Bản ghi học phí đã được tạo.",
+      });
+      setIsCreateDialogOpen(false);
+      fetchTuitionFees();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Không thể tạo học phí";
+      toast.error("Lỗi tạo học phí", { description: errorMessage });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateTuition = async (
+    id: string,
+    data: {
+      program_id?: string;
+      campus_id?: string;
+      year?: number;
+      semester_group_1_3_fee?: number;
+      semester_group_4_6_fee?: number;
+      semester_group_7_9_fee?: number;
+      is_active?: boolean;
+    }
+  ) => {
+    setIsSubmitting(true);
+    try {
+      await authService.updateTuitionRecord(id, data);
+      toast.success("Cập nhật học phí thành công!", {
+        description: "Bản ghi học phí đã được cập nhật.",
+      });
+      setIsEditDialogOpen(false);
+      setEditingTuition(null);
+      fetchTuitionFees();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Không thể cập nhật học phí";
+      toast.error("Lỗi cập nhật học phí", { description: errorMessage });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteTuition = async (id: string, programName: string) => {
+    if (
+      !confirm(
+        `Bạn có chắc chắn muốn xóa học phí cho chương trình "${programName}"?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await authService.deleteTuitionRecord(id);
+      toast.success("Xóa học phí thành công!", {
+        description: "Bản ghi học phí đã được xóa.",
+      });
+      fetchTuitionFees();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Không thể xóa học phí";
+      toast.error("Lỗi xóa học phí", { description: errorMessage });
+    }
+  };
+
+  const handleEditTuition = (tuition: TuitionFee) => {
+    setEditingTuition(tuition);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await Promise.all([fetchTuitionFees(), fetchDropdownData()]);
+    setIsRefreshing(false);
+  };
+
+  // Effects
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      await fetchDropdownData();
+      setIsLoading(false);
+    };
+    loadData();
+  }, [selectedYear]);
+
+  useEffect(() => {
+    if (activeTab === "fees") {
+      fetchTuitionFees();
+    }
+  }, [
+    currentPage,
+    selectedYear,
+    selectedProgramCode,
+    selectedCampusCode,
+    activeTab,
+  ]);
+
+  useEffect(() => {
+    if (activeTab === "fees" && tuitionFees.length === 0) {
+      fetchTuitionFees();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (selectedProgramCode && selectedProgramCode !== "all") {
+      fetchComparison();
+    } else {
+      setComparisons([]);
+    }
+  }, [selectedProgramCode, selectedYear]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6">
+      <div className="mb-6">
+        <div className="flex items-center space-x-2 mb-2">
+          <DollarSign className="h-6 w-6 text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-900">Quản Lý Học Phí</h1>
+        </div>
+        <p className="text-gray-600">
+          Quản lý học phí các chương trình đào tạo tại các cơ sở
+        </p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="fees">Học Phí</TabsTrigger>
+          <TabsTrigger value="comparison">So Sánh</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="fees">
+          <TuitionFeesTab
+            tuitionFees={tuitionFees}
+            tuitionMeta={tuitionMeta}
+            programs={programs}
+            campuses={campuses}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedProgramCode={selectedProgramCode}
+            setSelectedProgramCode={setSelectedProgramCode}
+            selectedCampusCode={selectedCampusCode}
+            setSelectedCampusCode={setSelectedCampusCode}
+            selectedYear={selectedYear}
+            setSelectedYear={setSelectedYear}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            pageSize={pageSize}
+            isRefreshing={isRefreshing}
+            error={error}
+            onRefresh={handleRefresh}
+            onCreateTuition={() => setIsCreateDialogOpen(true)}
+            onEditTuition={handleEditTuition}
+            onDeleteTuition={handleDeleteTuition}
+            formatCurrency={formatCurrency}
+          />
+        </TabsContent>
+
+        <TabsContent value="comparison">
+          <TuitionComparisonTab
+            comparisons={comparisons}
+            programs={programs}
+            selectedProgramCode={selectedProgramCode}
+            setSelectedProgramCode={setSelectedProgramCode}
+            selectedYear={selectedYear}
+            setSelectedYear={setSelectedYear}
+            formatCurrency={formatCurrency}
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* Create Tuition Dialog */}
+      <TuitionDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSubmit={handleCreateTuition}
+        programs={programs}
+        campuses={campuses}
+        isSubmitting={isSubmitting}
+        title="Thêm Học Phí Mới"
+        submitText="Tạo Học Phí"
+      />
+
+      {/* Edit Tuition Dialog */}
+      <TuitionDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSubmit={(data) =>
+          editingTuition && handleUpdateTuition(editingTuition.id, data)
+        }
+        programs={programs}
+        campuses={campuses}
+        isSubmitting={isSubmitting}
+        title="Chỉnh Sửa Học Phí"
+        submitText="Cập Nhật"
+        initialData={editingTuition}
+      />
+    </div>
+  );
+}
