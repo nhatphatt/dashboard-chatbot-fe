@@ -5,9 +5,13 @@
   "scripts": {
     "dev": "bun --bun next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "npx serve@latest out",
+    "preview": "npx serve@latest out",
+    "serve": "npx serve@latest out",
     "lint": "next lint",
-    "build:bun": "bun --bun next build"
+    "type-check": "tsc --noEmit",
+    "build:bun": "bun --bun next build",
+    "clean": "rm -rf .next out"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
