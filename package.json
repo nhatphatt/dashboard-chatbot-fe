@@ -11,7 +11,7 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "build:bun": "bun --bun next build",
-    "clean": "rm -rf .next out"
+    "clean": "powershell -Command \"Remove-Item -Recurse -Force .next, out -ErrorAction SilentlyContinue\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
