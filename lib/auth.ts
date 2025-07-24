@@ -1,5 +1,6 @@
+import { API_ENDPOINTS } from './constants';
+
 const API_BASE_URL = 'https://core-tuyensinh-production.up.railway.app/api/v1';
-const KNOWLEDGE_API_BASE_URL = 'https://agent-tuyensinh-production.up.railway.app/v1/api';
 
 export interface User {
   id: string;
@@ -408,7 +409,7 @@ class AuthService {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${KNOWLEDGE_API_BASE_URL}/knowledge/upload`, {
+    const response = await fetch(API_ENDPOINTS.KNOWLEDGE_UPLOAD, {
       method: 'POST',
       body: formData,
     });
@@ -423,7 +424,7 @@ class AuthService {
   }
 
   async getDocuments(): Promise<KnowledgeDocument[]> {
-    const response = await fetch(`${KNOWLEDGE_API_BASE_URL}/knowledge/documents`, {
+    const response = await fetch(API_ENDPOINTS.KNOWLEDGE_DOCUMENTS, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -456,15 +457,16 @@ class AuthService {
 
   private mapDocumentData(doc: any): KnowledgeDocument {
     return {
-      path: doc.path,
+      path: doc.filename || doc.path, // API trả về filename, fallback to path
       exists: doc.exists,
       size: doc.size,
-      filename: doc.path, // map path to filename for backward compatibility
+      filename: doc.filename || doc.path, // API field
+      modified: doc.modified, // API field
     };
   }
 
   async deleteDocument(filename: string): Promise<{ message: string }> {
-    const response = await fetch(`${KNOWLEDGE_API_BASE_URL}/knowledge/documents/${encodeURIComponent(filename)}`, {
+    const response = await fetch(`${API_ENDPOINTS.KNOWLEDGE_DOCUMENTS}/${encodeURIComponent(filename)}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -481,7 +483,7 @@ class AuthService {
   }
 
   async getKnowledgeStatus(): Promise<KnowledgeStatus> {
-    const response = await fetch(`${KNOWLEDGE_API_BASE_URL}/knowledge/status`, {
+    const response = await fetch(API_ENDPOINTS.KNOWLEDGE_STATUS, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -632,7 +634,8 @@ export interface KnowledgeDocument {
   path: string;
   exists: boolean;
   size: number;
-  filename?: string; // computed field for backward compatibility
+  filename?: string; // API field
+  modified?: string; // API field - timestamp
 }
 
 export interface KnowledgeStatus {
@@ -644,7 +647,10 @@ export interface KnowledgeStatus {
 
 export interface UploadResponse {
   message: string;
-  filename: string;
+  file_path: string;
+  file_size: number;
+  processing_status: string;
+  agno_optimized: boolean;
 }
 
 // Tuition interfaces

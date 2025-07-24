@@ -15,7 +15,6 @@ import {
   Building2,
   GraduationCap,
   MapPin,
-  BookOpen,
   DollarSign,
   Activity,
   RefreshCw,
@@ -87,13 +86,6 @@ const createEmptyStatsArray = () => [
     description: "Chương trình có học phí",
     icon: DollarSign,
     color: "text-yellow-600",
-  },
-  {
-    title: "Tài Liệu",
-    value: "0",
-    description: "Tài liệu hướng dẫn",
-    icon: BookOpen,
-    color: "text-indigo-600",
   },
 ];
 
@@ -194,13 +186,6 @@ export default function DashboardPage() {
       icon: DollarSign,
       color: "text-yellow-600",
     },
-    {
-      title: "Tài Liệu",
-      value: stats.totalKnowledgeDocs.toString(),
-      description: "Tài liệu hướng dẫn",
-      icon: BookOpen,
-      color: "text-indigo-600",
-    },
   ];
 
   if (isLoading) {
@@ -271,7 +256,7 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
           <Card key={stat.title} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

@@ -156,7 +156,7 @@ const TuitionFeesTab = React.memo(function TuitionFeesTab({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
               <Label htmlFor="search">Tìm kiếm</Label>
               <div className="relative">
@@ -226,23 +226,30 @@ const TuitionFeesTab = React.memo(function TuitionFeesTab({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-end space-x-2">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-2">
               <Button
                 onClick={onRefresh}
                 disabled={isRefreshing}
                 variant="outline"
                 size="sm"
+                className="w-full sm:w-auto"
               >
                 <RefreshCw
                   className={`h-4 w-4 mr-2 ${
                     isRefreshing ? "animate-spin" : ""
                   }`}
                 />
-                Làm Mới
+                <span className="hidden xs:inline">Làm Mới</span>
+                <span className="xs:hidden">Refresh</span>
               </Button>
-              <Button onClick={onCreateTuition} size="sm">
+              <Button
+                onClick={onCreateTuition}
+                size="sm"
+                className="w-full sm:w-auto"
+              >
                 <Plus className="h-4 w-4 mr-2" />
-                Thêm Học Phí
+                <span className="hidden xs:inline">Thêm Học Phí</span>
+                <span className="xs:hidden">Thêm</span>
               </Button>
             </div>
           </div>
@@ -258,8 +265,8 @@ const TuitionFeesTab = React.memo(function TuitionFeesTab({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md border overflow-x-auto">
+            <Table className="min-w-[800px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Chương Trình</TableHead>
@@ -333,13 +340,16 @@ const TuitionFeesTab = React.memo(function TuitionFeesTab({
                         {formatCurrency(fee.total_program_fee)}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => onEditTuition(fee)}
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                            title="Chỉnh sửa"
                           >
                             <Edit className="h-4 w-4" />
+                            <span className="hidden sm:inline ml-2">Sửa</span>
                           </Button>
                           <Button
                             variant="outline"
@@ -347,8 +357,11 @@ const TuitionFeesTab = React.memo(function TuitionFeesTab({
                             onClick={() =>
                               onDeleteTuition(fee.id, fee.program_name)
                             }
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 text-red-600 hover:text-red-700"
+                            title="Xóa"
                           >
                             <Trash2 className="h-4 w-4" />
+                            <span className="hidden sm:inline ml-2">Xóa</span>
                           </Button>
                         </div>
                       </TableCell>
@@ -361,8 +374,8 @@ const TuitionFeesTab = React.memo(function TuitionFeesTab({
 
           {/* Pagination */}
           {tuitionMeta && tuitionMeta.total > pageSize && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-4">
+              <div className="text-sm text-gray-600 text-center sm:text-left">
                 Hiển thị {tuitionMeta.offset + 1} đến{" "}
                 {Math.min(
                   tuitionMeta.offset + tuitionMeta.limit,
@@ -370,27 +383,28 @@ const TuitionFeesTab = React.memo(function TuitionFeesTab({
                 )}{" "}
                 trong {tuitionMeta.total} kết quả
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(currentPage - 1)}
                   disabled={!tuitionMeta.has_prev}
+                  className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Trước
+                  <span className="hidden sm:inline ml-2">Trước</span>
                 </Button>
-                <span className="text-sm">
-                  Trang {currentPage} /{" "}
-                  {Math.ceil(tuitionMeta.total / pageSize)}
+                <span className="text-sm px-2">
+                  {currentPage} / {Math.ceil(tuitionMeta.total / pageSize)}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(currentPage + 1)}
                   disabled={!tuitionMeta.has_next}
+                  className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 >
-                  Sau
+                  <span className="hidden sm:inline mr-2">Sau</span>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

@@ -43,10 +43,7 @@ const navigationGroups = [
   },
   {
     name: "Hỗ Trợ",
-    items: [
-      { name: "Tài Liệu", href: "/dashboard/knowledge", icon: BookOpen },
-      { name: "Người Dùng", href: "/dashboard/users", icon: Users },
-    ],
+    items: [{ name: "Tài Liệu", href: "/dashboard/knowledge", icon: BookOpen }],
   },
 ];
 

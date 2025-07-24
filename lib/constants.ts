@@ -1,5 +1,6 @@
 // API Configuration
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://core-tuyensinh-production.up.railway.app';
+export const KNOWLEDGE_API_BASE_URL = process.env.NEXT_PUBLIC_KNOWLEDGE_API_BASE_URL || 'https://agent-tuyensinh-production.up.railway.app/v1/api';
 
 // API Endpoints
 export const API_ENDPOINTS = {
@@ -22,14 +23,18 @@ export const API_ENDPOINTS = {
   // Campuses
   CAMPUSES: `${API_BASE_URL}/api/v1/campuses`,
   
-  // Users
-  USERS: `${API_BASE_URL}/api/v1/users`,
+
   
   // Tuition
   TUITION: `${API_BASE_URL}/api/v1/tuition`,
   
-  // Knowledge
+  // Knowledge (Legacy - for dashboard stats)
   KNOWLEDGE: `${API_BASE_URL}/api/v1/knowledge`,
+
+  // Knowledge API (Agno-optimized)
+  KNOWLEDGE_UPLOAD: `${KNOWLEDGE_API_BASE_URL}/knowledge/upload`,
+  KNOWLEDGE_DOCUMENTS: `${KNOWLEDGE_API_BASE_URL}/knowledge/documents`,
+  KNOWLEDGE_STATUS: `${KNOWLEDGE_API_BASE_URL}/knowledge/status`,
 } as const;
 
 // Default pagination
@@ -106,7 +111,7 @@ export const ROUTES = {
   DEPARTMENTS: '/dashboard/departments',
   PROGRAMS: '/dashboard/programs',
   CAMPUSES: '/dashboard/campuses',
-  USERS: '/dashboard/users',
+
   TUITION: '/dashboard/tuition',
   KNOWLEDGE: '/dashboard/knowledge',
   PROFILE: '/dashboard/profile',

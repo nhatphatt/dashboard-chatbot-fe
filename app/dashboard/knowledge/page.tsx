@@ -48,13 +48,12 @@ import {
   FileText,
   Search,
   AlertCircle,
-  CheckCircle,
 } from "lucide-react";
-import { authService, KnowledgeDocument, KnowledgeStatus } from "@/lib/auth";
+import { authService, KnowledgeDocument } from "@/lib/auth";
 
 export default function KnowledgePage() {
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
-  const [status, setStatus] = useState<KnowledgeStatus | null>(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -76,14 +75,10 @@ export default function KnowledgePage() {
     try {
       setError("");
 
-      const [documentsResponse, statusResponse] = await Promise.all([
-        authService.getDocuments(),
-        authService.getKnowledgeStatus(),
-      ]);
+      const documentsResponse = await authService.getDocuments();
 
       // Đảm bảo documentsResponse là array
       setDocuments(Array.isArray(documentsResponse) ? documentsResponse : []);
-      setStatus(statusResponse);
     } catch (error) {
       console.error("Knowledge API Error:", error);
       const errorMessage =
@@ -313,29 +308,7 @@ export default function KnowledgePage() {
         )}
 
         {/* Status Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Trạng Thái Cơ Sở Kiến Thức
-              </CardTitle>
-              {status?.exists ? (
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              ) : (
-                <AlertCircle className="h-4 w-4 text-red-600" />
-              )}
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {status?.exists ? "Hoạt động" : "Không hoạt động"}
-              </div>
-              {status && (
-                <p className="text-xs text-muted-foreground">
-                  Loại: {status.type}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+        <div className="grid gap-4 md:grid-cols-1">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -346,18 +319,6 @@ export default function KnowledgePage() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {Array.isArray(documents) ? documents.length : 0}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Đường Dẫn Lưu Trữ
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm font-mono bg-gray-100 p-2 rounded">
-                {status?.path || "Không xác định"}
               </div>
             </CardContent>
           </Card>
