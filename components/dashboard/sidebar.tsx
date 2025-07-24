@@ -17,7 +17,6 @@ import {
   Menu,
   X,
   Users,
-  BarChart3,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -77,7 +76,7 @@ export default function Sidebar({ className }: SidebarProps) {
   return (
     <div
       className={cn(
-        "flex h-full flex-col bg-white border-r border-gray-200 transition-all duration-300 ease-in-out shadow-sm",
+        "flex min-h-screen flex-col bg-white border-r border-gray-200 transition-all duration-300 ease-in-out shadow-sm",
         isCollapsed ? "w-16" : "w-64",
         className
       )}

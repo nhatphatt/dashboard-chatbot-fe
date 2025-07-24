@@ -76,8 +76,13 @@
   * {
     @apply border-border;
   }
-  body {
+  html, body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+  }
+  body {
+    margin: 0;
+    padding: 0;
   }
 }
 
