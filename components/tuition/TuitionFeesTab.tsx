@@ -29,10 +29,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  RefreshCw,
   Search,
   BarChart3,
-  Plus,
   Edit,
   Trash2,
   ChevronLeft,
@@ -156,7 +154,7 @@ const TuitionFeesTab = React.memo(function TuitionFeesTab({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="search">Tìm kiếm</Label>
               <div className="relative">
@@ -225,32 +223,6 @@ const TuitionFeesTab = React.memo(function TuitionFeesTab({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:items-end gap-2">
-              <Button
-                onClick={onRefresh}
-                disabled={isRefreshing}
-                variant="outline"
-                size="sm"
-                className="w-full sm:w-auto"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 mr-2 ${
-                    isRefreshing ? "animate-spin" : ""
-                  }`}
-                />
-                <span className="hidden xs:inline">Làm Mới</span>
-                <span className="xs:hidden">Refresh</span>
-              </Button>
-              <Button
-                onClick={onCreateTuition}
-                size="sm"
-                className="w-full sm:w-auto"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                <span className="hidden xs:inline">Thêm Học Phí</span>
-                <span className="xs:hidden">Thêm</span>
-              </Button>
             </div>
           </div>
         </CardContent>

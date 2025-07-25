@@ -27,7 +27,16 @@ export const API_ENDPOINTS = {
   
   // Tuition
   TUITION: `${API_BASE_URL}/api/v1/tuition`,
-  
+
+  // Scholarships
+  SCHOLARSHIPS: `${API_BASE_URL}/api/v1/scholarships`,
+
+  // Admission Methods
+  ADMISSION_METHODS: `${API_BASE_URL}/api/v1/admission-methods`,
+
+  // Users
+  USERS: `${API_BASE_URL}/api/v1/users`,
+
   // Knowledge (Legacy - for dashboard stats)
   KNOWLEDGE: `${API_BASE_URL}/api/v1/knowledge`,
 
@@ -113,6 +122,9 @@ export const ROUTES = {
   CAMPUSES: '/dashboard/campuses',
 
   TUITION: '/dashboard/tuition',
+  SCHOLARSHIPS: '/dashboard/scholarships',
+  ADMISSION_METHODS: '/dashboard/admission-methods',
+  USERS: '/dashboard/users',
   KNOWLEDGE: '/dashboard/knowledge',
   PROFILE: '/dashboard/profile',
 } as const;

@@ -627,6 +627,505 @@ class AuthService {
 
     return response.json();
   }
+
+  // Scholarship methods
+  async getScholarships(params?: {
+    year?: number;
+    type?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ScholarshipResponse> {
+    const searchParams = new URLSearchParams();
+
+    if (params?.year) searchParams.append('year', params.year.toString());
+    if (params?.type) searchParams.append('type', params.type);
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.offset) searchParams.append('offset', params.offset.toString());
+
+    const url = `${API_ENDPOINTS.SCHOLARSHIPS}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+
+    const token = this.getToken();
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền truy cập danh sách học bổng.');
+      }
+      throw new Error(`HTTP ${response.status}: Failed to fetch scholarships`);
+    }
+
+    return await response.json();
+  }
+
+  async getScholarshipById(id: string): Promise<{ data: Scholarship }> {
+    const token = this.getToken();
+    const response = await fetch(`${API_ENDPOINTS.SCHOLARSHIPS}/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền truy cập thông tin học bổng này.');
+      }
+      if (response.status === 404) {
+        throw new Error('Không tìm thấy học bổng');
+      }
+      throw new Error(`HTTP ${response.status}: Failed to fetch scholarship`);
+    }
+
+    return await response.json();
+  }
+
+  async createScholarship(data: {
+    code: string;
+    name: string;
+    type: string;
+    recipients: number;
+    percentage?: number | null;
+    requirements?: string;
+    year: number;
+    notes?: string;
+  }): Promise<{ data: Scholarship }> {
+    const token = this.getToken();
+    const response = await fetch(API_ENDPOINTS.SCHOLARSHIPS, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền thực hiện thao tác này.');
+      }
+      if (response.status === 409) {
+        throw new Error('Học bổng với mã này đã tồn tại trong năm này');
+      }
+      throw new Error(errorData.message || `HTTP ${response.status}: Failed to create scholarship`);
+    }
+
+    return await response.json();
+  }
+
+  async updateScholarship(id: string, data: {
+    code?: string;
+    name?: string;
+    type?: string;
+    recipients?: number;
+    percentage?: number | null;
+    requirements?: string;
+    year?: number;
+    notes?: string;
+    is_active?: boolean;
+  }): Promise<{ data: Scholarship }> {
+    const token = this.getToken();
+    const response = await fetch(`${API_ENDPOINTS.SCHOLARSHIPS}/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền thực hiện thao tác này.');
+      }
+      if (response.status === 404) {
+        throw new Error('Không tìm thấy học bổng');
+      }
+      if (response.status === 409) {
+        throw new Error('Học bổng với mã này đã tồn tại trong năm này');
+      }
+      throw new Error(errorData.message || `HTTP ${response.status}: Failed to update scholarship`);
+    }
+
+    return await response.json();
+  }
+
+  async deleteScholarship(id: string): Promise<{ message: string }> {
+    const token = this.getToken();
+    const response = await fetch(`${API_ENDPOINTS.SCHOLARSHIPS}/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền thực hiện thao tác này.');
+      }
+      if (response.status === 404) {
+        throw new Error('Không tìm thấy học bổng');
+      }
+      throw new Error(errorData.message || `HTTP ${response.status}: Failed to delete scholarship`);
+    }
+
+    return await response.json();
+  }
+
+  // Admission Methods
+  async getAdmissionMethods(params?: {
+    year?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<AdmissionMethodResponse> {
+    const searchParams = new URLSearchParams();
+
+    if (params?.year) searchParams.append('year', params.year.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.offset !== undefined) searchParams.append('offset', params.offset.toString());
+
+    const url = `${API_ENDPOINTS.ADMISSION_METHODS}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+
+    const token = this.getToken();
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền truy cập danh sách phương thức tuyển sinh.');
+      }
+      throw new Error(`HTTP ${response.status}: Failed to fetch admission methods`);
+    }
+
+    return await response.json();
+  }
+
+  async getAdmissionMethodById(id: string): Promise<{ data: AdmissionMethod }> {
+    const token = this.getToken();
+    const response = await fetch(`${API_ENDPOINTS.ADMISSION_METHODS}/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền truy cập thông tin phương thức tuyển sinh này.');
+      }
+      if (response.status === 404) {
+        throw new Error('Không tìm thấy phương thức tuyển sinh');
+      }
+      throw new Error(`HTTP ${response.status}: Failed to fetch admission method`);
+    }
+
+    return await response.json();
+  }
+
+  async createAdmissionMethod(data: {
+    method_code: string;
+    name: string;
+    requirements?: string;
+    notes?: string;
+    year: number;
+  }): Promise<{ data: AdmissionMethod }> {
+    const token = this.getToken();
+    const response = await fetch(API_ENDPOINTS.ADMISSION_METHODS, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền tạo phương thức tuyển sinh mới.');
+      }
+      if (response.status === 400) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Dữ liệu không hợp lệ');
+      }
+      if (response.status === 409) {
+        throw new Error('Mã phương thức này đã tồn tại trong năm được chọn');
+      }
+      throw new Error(`HTTP ${response.status}: Failed to create admission method`);
+    }
+
+    return await response.json();
+  }
+
+  async updateAdmissionMethod(id: string, data: {
+    method_code?: string;
+    name?: string;
+    requirements?: string;
+    notes?: string;
+    year?: number;
+    is_active?: boolean;
+  }): Promise<{ data: AdmissionMethod }> {
+    const token = this.getToken();
+    const response = await fetch(`${API_ENDPOINTS.ADMISSION_METHODS}/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền cập nhật phương thức tuyển sinh này.');
+      }
+      if (response.status === 400) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Dữ liệu không hợp lệ');
+      }
+      if (response.status === 404) {
+        throw new Error('Không tìm thấy phương thức tuyển sinh');
+      }
+      if (response.status === 409) {
+        throw new Error('Mã phương thức này đã tồn tại trong năm được chọn');
+      }
+      throw new Error(`HTTP ${response.status}: Failed to update admission method`);
+    }
+
+    return await response.json();
+  }
+
+  async deleteAdmissionMethod(id: string): Promise<{ message: string }> {
+    const token = this.getToken();
+    const response = await fetch(`${API_ENDPOINTS.ADMISSION_METHODS}/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền xóa phương thức tuyển sinh này.');
+      }
+      if (response.status === 404) {
+        throw new Error('Không tìm thấy phương thức tuyển sinh');
+      }
+      throw new Error(`HTTP ${response.status}: Failed to delete admission method`);
+    }
+
+    return await response.json();
+  }
+
+  // Users
+  async getUsers(params?: {
+    role?: 'student' | 'admin' | 'staff' | 'super_admin';
+    is_active?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<UserResponse> {
+    const searchParams = new URLSearchParams();
+
+    if (params?.role) searchParams.append('role', params.role);
+    if (params?.is_active !== undefined) searchParams.append('is_active', params.is_active.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.offset !== undefined) searchParams.append('offset', params.offset.toString());
+
+    const url = `${API_ENDPOINTS.USERS}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+
+    const token = this.getToken();
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền truy cập danh sách người dùng.');
+      }
+      throw new Error(`HTTP ${response.status}: Failed to fetch users`);
+    }
+
+    return await response.json();
+  }
+
+  async getUserById(id: string): Promise<SingleUserResponse> {
+    const token = this.getToken();
+    const response = await fetch(`${API_ENDPOINTS.USERS}/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền truy cập thông tin người dùng này.');
+      }
+      if (response.status === 404) {
+        throw new Error('Không tìm thấy người dùng.');
+      }
+      throw new Error(`HTTP ${response.status}: Failed to fetch user`);
+    }
+
+    return await response.json();
+  }
+
+  async createUser(data: {
+    username: string;
+    email: string;
+    password: string;
+    role?: 'student' | 'admin' | 'staff' | 'super_admin';
+  }): Promise<SingleUserResponse> {
+    const token = this.getToken();
+    const response = await fetch(API_ENDPOINTS.USERS, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        ...data,
+        role: data.role || 'staff',
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền tạo người dùng mới.');
+      }
+      if (response.status === 400) {
+        throw new Error('Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.');
+      }
+      if (response.status === 409) {
+        throw new Error('Tên đăng nhập hoặc email đã tồn tại.');
+      }
+      throw new Error(`HTTP ${response.status}: Failed to create user`);
+    }
+
+    return await response.json();
+  }
+
+  async updateUser(id: string, data: {
+    username?: string;
+    email?: string;
+    password?: string;
+    role?: 'student' | 'admin' | 'staff' | 'super_admin';
+    is_active?: boolean;
+  }): Promise<SingleUserResponse> {
+    const token = this.getToken();
+    const response = await fetch(`${API_ENDPOINTS.USERS}/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền cập nhật người dùng này.');
+      }
+      if (response.status === 400) {
+        throw new Error('Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.');
+      }
+      if (response.status === 404) {
+        throw new Error('Không tìm thấy người dùng.');
+      }
+      throw new Error(`HTTP ${response.status}: Failed to update user`);
+    }
+
+    return await response.json();
+  }
+
+  async deleteUser(id: string): Promise<{ message: string }> {
+    const token = this.getToken();
+    const response = await fetch(`${API_ENDPOINTS.USERS}/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      if (response.status === 403) {
+        throw new Error('Bạn không có quyền xóa người dùng này.');
+      }
+      if (response.status === 404) {
+        throw new Error('Không tìm thấy người dùng.');
+      }
+      throw new Error(`HTTP ${response.status}: Failed to delete user`);
+    }
+
+    return await response.json();
+  }
 }
 
 // Knowledge interfaces
@@ -651,6 +1150,82 @@ export interface UploadResponse {
   file_size: number;
   processing_status: string;
   agno_optimized: boolean;
+}
+
+// Scholarship interfaces
+export interface Scholarship {
+  id: string;
+  code: string;
+  name: string;
+  type: string;
+  recipients: number;
+  percentage: number | null;
+  requirements: string;
+  year: number;
+  notes: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ScholarshipResponse {
+  data: Scholarship[];
+  meta: {
+    total: number;
+    limit: number;
+    offset: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
+}
+
+// Admission Method interfaces
+export interface AdmissionMethod {
+  id: string;
+  method_code: string;
+  name: string;
+  requirements: string;
+  notes: string;
+  year: number;
+  is_active: boolean;
+}
+
+export interface AdmissionMethodResponse {
+  data: AdmissionMethod[];
+  meta: {
+    total: number;
+    limit: number;
+    offset: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
+}
+
+// User interfaces
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  role: 'student' | 'admin' | 'staff' | 'super_admin';
+  is_active: boolean;
+  last_login_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserResponse {
+  data: User[];
+  meta: {
+    total: number;
+    limit: number;
+    offset: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
+}
+
+export interface SingleUserResponse {
+  data: User;
 }
 
 // Tuition interfaces

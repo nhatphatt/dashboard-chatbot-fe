@@ -59,6 +59,9 @@ const TuitionDialog = React.memo(function TuitionDialog({
   });
 
   useEffect(() => {
+    console.log("TuitionDialog - Received campuses:", campuses);
+    console.log("TuitionDialog - Received programs:", programs);
+
     if (initialData) {
       setFormData({
         program_id: initialData.program_id,
@@ -78,7 +81,7 @@ const TuitionDialog = React.memo(function TuitionDialog({
         semester_group_7_9_fee: 0,
       });
     }
-  }, [initialData, open]);
+  }, [initialData, open, campuses, programs]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

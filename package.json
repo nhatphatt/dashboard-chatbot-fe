@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "bun --bun next dev",
+    "dev:node": "next dev",
     "build": "next build",
     "start": "npx serve@latest out",
     "preview": "npx serve@latest out",

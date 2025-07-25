@@ -10,6 +10,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import WelcomeBanner from "@/components/dashboard/welcome-banner";
+import { authService } from "@/lib/auth";
 
 import {
   Building2,
@@ -19,6 +22,9 @@ import {
   Activity,
   RefreshCw,
   Clock,
+  Bell,
+  Eye,
+  MessageSquare,
 } from "lucide-react";
 
 // API Response Interfaces
@@ -56,8 +62,16 @@ interface DashboardData {
   quickActions: QuickAction[];
 }
 
+interface StatCard {
+  title: string;
+  value: string;
+  description: string;
+  icon: any;
+  color: string;
+}
+
 // Empty stats template for when no data is available
-const createEmptyStatsArray = () => [
+const createEmptyStatsArray = (): StatCard[] => [
   {
     title: "Tổng Số Khoa",
     value: "0",
@@ -79,7 +93,6 @@ const createEmptyStatsArray = () => [
     icon: MapPin,
     color: "text-purple-600",
   },
-
   {
     title: "Học Phí Chương Trình",
     value: "0",
@@ -93,9 +106,16 @@ export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null
   );
+  const [user, setUser] = useState<any>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Get user data
+  useEffect(() => {
+    const userData = authService.getUserData();
+    setUser(userData);
+  }, []);
 
   // Fetch dashboard data
   const fetchDashboardData = async () => {
@@ -156,7 +176,7 @@ export default function DashboardPage() {
   };
 
   // Create stats array from API data
-  const createStatsArray = (stats: DashboardStats) => [
+  const createStatsArray = (stats: DashboardStats): StatCard[] => [
     {
       title: "Tổng Số Khoa",
       value: stats.totalDepartments.toString(),
@@ -178,7 +198,6 @@ export default function DashboardPage() {
       icon: MapPin,
       color: "text-purple-600",
     },
-
     {
       title: "Học Phí Chương Trình",
       value: stats.totalTuitionPrograms.toString(),
@@ -190,18 +209,91 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Chào mừng đến với bảng điều khiển quản trị
-          </p>
+      <div className="space-y-8">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-10 w-64 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
+            <div className="h-6 w-96 bg-gray-200 rounded-lg animate-pulse"></div>
+          </div>
+          <div className="flex space-x-3">
+            <div className="h-9 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
+            <div className="h-9 w-28 bg-gray-200 rounded-lg animate-pulse"></div>
+          </div>
         </div>
 
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Đang tải dữ liệu dashboard...</p>
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, index) => (
+            <Card key={index} className="border border-gray-200">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-8 w-8 bg-gray-200 rounded-lg animate-pulse"></div>
+                  </div>
+                  <div className="h-8 w-16 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="h-3 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-2 w-full bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Content Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <Card className="border border-gray-200">
+              <CardHeader className="border-b border-gray-100">
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                  <div className="space-y-2">
+                    <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 w-64 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {[...Array(5)].map((_, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start space-x-4 p-4 border border-gray-100 rounded-lg"
+                    >
+                      <div className="h-3 w-3 bg-gray-200 rounded-full animate-pulse"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-3 w-full bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-3 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="space-y-6">
+            {[...Array(2)].map((_, index) => (
+              <Card key={index} className="border border-gray-200">
+                <CardHeader className="border-b border-gray-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-10 w-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                    <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-3">
+                    {[...Array(4)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-12 w-full bg-gray-200 rounded-lg animate-pulse"
+                      ></div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </div>
@@ -210,29 +302,50 @@ export default function DashboardPage() {
 
   if (error && !dashboardData) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Chào mừng đến với bảng điều khiển quản trị
-          </p>
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Chào mừng đến với bảng điều khiển quản trị hiện đại
+            </p>
+          </div>
         </div>
 
-        <Card className="border-red-200">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="text-red-600 mb-2">⚠️</div>
-              <h3 className="text-lg font-semibold text-red-800 mb-2">
-                Lỗi tải dữ liệu
-              </h3>
-              <p className="text-red-600 mb-4">{error}</p>
-              <Button onClick={handleRefresh} variant="outline">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Thử lại
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Error State */}
+        <div className="flex items-center justify-center min-h-[500px]">
+          <Card className="border border-red-200 bg-gradient-to-br from-red-50 to-orange-50 max-w-md w-full">
+            <CardContent className="p-8">
+              <div className="text-center space-y-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-orange-600 rounded-full flex items-center justify-center mx-auto">
+                  <Bell className="h-10 w-10 text-white" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    Không thể tải dữ liệu
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">{error}</p>
+                </div>
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleRefresh}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Thử lại
+                  </Button>
+                  <Button variant="outline" className="w-full">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Báo cáo lỗi
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -242,82 +355,139 @@ export default function DashboardPage() {
     : createEmptyStatsArray();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Welcome Banner */}
+      <WelcomeBanner userName={user?.username} userRole={user?.role} />
+
+      {/* Header Section */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Chào mừng đến với bảng điều khiển quản trị
+        <div className="space-y-1">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Dashboard
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Tổng quan hệ thống quản lý tuyển sinh
           </p>
         </div>
-        <Button onClick={handleRefresh} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Làm mới
-        </Button>
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            size="sm"
+            className="hover:bg-blue-50"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Làm mới
+          </Button>
+        </div>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <Card key={stat.title} className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+        {stats.map((stat, index) => (
+          <Card
+            key={stat.title}
+            className="relative overflow-hidden hover:-translate-y-1 transition-all duration-300 border border-gray-200 bg-gradient-to-br from-white to-gray-50"
+          >
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full -translate-y-10 translate-x-10 opacity-20"></div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-semibold text-gray-700">
                 {stat.title}
               </CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <div
+                className={`p-2 rounded-lg bg-gradient-to-br ${
+                  index === 0
+                    ? "from-blue-500 to-blue-600"
+                    : index === 1
+                    ? "from-green-500 to-green-600"
+                    : index === 2
+                    ? "from-purple-500 to-purple-600"
+                    : "from-yellow-500 to-yellow-600"
+                }`}
+              >
+                <stat.icon className="h-5 w-5 text-white" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">
-                {stat.description}
-              </p>
+            <CardContent className="space-y-3">
+              <div className="text-3xl font-bold text-gray-900">
+                {stat.value}
+              </div>
+              <p className="text-sm text-gray-600">{stat.description}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Recent Activities - Full Width */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Activity className="h-5 w-5" />
-            <span>Hoạt Động Gần Đây</span>
+      {/* Recent Activities */}
+      <Card className="border border-gray-200 bg-gradient-to-br from-white to-gray-50">
+        <CardHeader className="border-b border-gray-100">
+          <CardTitle className="flex items-center space-x-3">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+              <Activity className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <span className="text-xl font-bold text-gray-900">
+                Hoạt Động Gần Đây
+              </span>
+              <CardDescription className="mt-1">
+                Cập nhật mới nhất từ hệ thống
+              </CardDescription>
+            </div>
           </CardTitle>
-          <CardDescription>
-            Cập nhật mới nhất từ bảng điều khiển của bạn
-          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {dashboardData?.recentActivities &&
           dashboardData.recentActivities.length > 0 ? (
-            <div className="space-y-4">
-              {dashboardData.recentActivities.slice(0, 5).map((activity) => (
-                <div key={activity.id} className="flex items-start space-x-4">
-                  <div
-                    className={`w-2 h-2 ${getActivityColor(
-                      activity.type
-                    )} rounded-full mt-2`}
-                  ></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {dashboardData.recentActivities.slice(0, 6).map((activity) => (
+                <div
+                  key={activity.id}
+                  className="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 border border-gray-100"
+                >
+                  <div className="flex-shrink-0">
+                    <div
+                      className={`w-3 h-3 ${getActivityColor(
+                        activity.type
+                      )} rounded-full`}
+                    ></div>
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {activity.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {activity.title}
+                      </p>
+                      <Badge variant="secondary" className="text-xs">
+                        {activity.entityName}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                       {activity.description}
                     </p>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Clock className="h-3 w-3 text-muted-foreground" />
-                      <p className="text-xs text-muted-foreground">
-                        {formatTimestamp(activity.timestamp)}
-                      </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1 text-xs text-gray-500">
+                        <Clock className="h-3 w-3" />
+                        <span>{formatTimestamp(activity.timestamp)}</span>
+                      </div>
+                      <div className="flex items-center space-x-1 text-xs text-blue-600">
+                        <Eye className="h-3 w-3" />
+                        <span>Chi tiết</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Chưa có hoạt động nào</p>
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Activity className="h-8 w-8 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Chưa có hoạt động
+              </h3>
+              <p className="text-gray-500">
+                Các hoạt động mới sẽ xuất hiện ở đây
+              </p>
             </div>
           )}
         </CardContent>

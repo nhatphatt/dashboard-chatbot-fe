@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,9 +19,11 @@ import {
   X,
   Users,
   ChevronDown,
+  Award,
+  FileText,
   ChevronRight,
 } from "lucide-react";
-import { authService } from "@/lib/auth";
+import { authService, User as UserType } from "@/lib/auth";
 
 const navigationGroups = [
   {
@@ -38,11 +41,20 @@ const navigationGroups = [
       },
       { name: "Cơ Sở", href: "/dashboard/campuses", icon: MapPin },
       { name: "Học Phí", href: "/dashboard/tuition", icon: DollarSign },
+      { name: "Học Bổng", href: "/dashboard/scholarships", icon: Award },
+      {
+        name: "Phương Thức Tuyển Sinh",
+        href: "/dashboard/admission-methods",
+        icon: FileText,
+      },
     ],
   },
   {
     name: "Hỗ Trợ",
-    items: [{ name: "Tài Liệu", href: "/dashboard/knowledge", icon: BookOpen }],
+    items: [
+      { name: "Tài Liệu", href: "/dashboard/knowledge", icon: BookOpen },
+      { name: "Người Dùng", href: "/dashboard/users", icon: Users },
+    ],
   },
 ];
 
@@ -57,6 +69,13 @@ export default function Sidebar({ className }: SidebarProps) {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set()
   );
+  const [user, setUser] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    const userData = authService.getUserData();
+    console.log("Sidebar - User data:", userData);
+    setUser(userData);
+  }, []);
 
   const handleLogout = () => {
     authService.logout();
@@ -76,16 +95,34 @@ export default function Sidebar({ className }: SidebarProps) {
   return (
     <div
       className={cn(
-        "flex min-h-screen flex-col bg-white border-r border-gray-200 transition-all duration-300 ease-in-out shadow-sm",
+        "flex min-h-screen flex-col bg-white border-r border-gray-200 transition-all duration-300 ease-in-out",
         isCollapsed ? "w-16" : "w-64",
         className
       )}
     >
-      <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-600 to-blue-700">
-        {!isCollapsed && (
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <GraduationCap className="h-5 w-5 text-blue-600" />
+      <div className="flex items-center justify-between px-4 h-16 border-b bg-gradient-to-r from-blue-600 to-blue-700">
+        {isCollapsed ? (
+          <div className="flex items-center justify-center">
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center p-1">
+              <Image
+                src="/Logo-FPT-1024x620.webp"
+                alt="FPT University Logo"
+                width={24}
+                height={15}
+                className="object-contain"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1">
+              <Image
+                src="/Logo-FPT-1024x620.webp"
+                alt="FPT University Logo"
+                width={32}
+                height={20}
+                className="object-contain"
+              />
             </div>
             <div>
               <h1 className="text-lg font-bold text-white">FPT University</h1>
@@ -171,18 +208,23 @@ export default function Sidebar({ className }: SidebarProps) {
       </ScrollArea>
 
       <div className="p-3 border-t bg-gray-50">
-        {!isCollapsed && (
+        {!isCollapsed && user && (
           <div className="mb-3 px-2">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <Users className="h-4 w-4 text-blue-600" />
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-xs font-semibold text-white">
+                  {user.username.slice(0, 2).toUpperCase()}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  Admin User
+                  {user.username}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  admin@fpt.edu.vn
+                  {user.email || "user@fpt.edu.vn"}
+                </p>
+                <p className="text-xs text-blue-600 font-medium">
+                  {user.role === "super_admin" ? "Super Admin" : "Admin"}
                 </p>
               </div>
             </div>
@@ -193,13 +235,13 @@ export default function Sidebar({ className }: SidebarProps) {
           variant="ghost"
           onClick={handleLogout}
           className={cn(
-            "w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors",
+            "w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors border border-red-200 hover:border-red-300",
             isCollapsed ? "px-2 h-10" : "px-3 h-9"
           )}
           title={isCollapsed ? "Đăng Xuất" : undefined}
         >
           <LogOut className={cn("h-4 w-4", !isCollapsed && "mr-3")} />
-          {!isCollapsed && "Đăng Xuất"}
+          {!isCollapsed && <span className="font-medium">Đăng Xuất</span>}
         </Button>
       </div>
     </div>

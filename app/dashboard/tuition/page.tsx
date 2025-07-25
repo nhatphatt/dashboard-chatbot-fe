@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DollarSign, RefreshCw, Plus } from "lucide-react";
 
 // Import tab components
 import {
@@ -118,6 +119,7 @@ export default function TuitionPage() {
 
       console.log("Programs API response:", programsData);
       console.log("Campuses API response:", campusesData);
+      console.log("Raw campuses count:", campusesData.data?.length || 0);
 
       // Extract data for dropdowns
       const programsForDropdown = programsData.data.map((program: any) => ({
@@ -140,7 +142,10 @@ export default function TuitionPage() {
         email: campus.email,
         discount_percentage: campus.discount_percentage,
         preparation_fees: campus.preparation_fees,
-        available_programs: campus.available_programs,
+        available_programs: campus.available_programs || {
+          count: 0,
+          codes: [],
+        },
       }));
 
       setPrograms(programsForDropdown);
@@ -222,7 +227,7 @@ export default function TuitionPage() {
               description: "",
             },
           },
-          available_programs: { count: 0, codes: [] },
+          available_programs: { count: 2, codes: ["IA", "DT"] },
         },
         {
           id: "2",
@@ -248,7 +253,7 @@ export default function TuitionPage() {
               description: "",
             },
           },
-          available_programs: { count: 0, codes: [] },
+          available_programs: { count: 2, codes: ["IA", "DT"] },
         },
       ];
 
@@ -380,10 +385,33 @@ export default function TuitionPage() {
     );
   }, [programs, searchTerm]);
 
-  const filteredCampuses = useMemo(() => {
+  const filteredCampusesForList = useMemo(() => {
     return campuses.filter(
       (campus) => campus.available_programs.codes.length > 0
     );
+  }, [campuses]);
+
+  const filteredCampusesForCreate = useMemo(() => {
+    console.log("All campuses before filtering:", campuses);
+
+    // Nếu không có available_programs hoặc codes rỗng, vẫn cho phép chọn
+    // vì có thể cơ sở mới chưa có dữ liệu programs
+    const filtered = campuses.filter((campus) => {
+      const hasPrograms = campus.available_programs?.codes?.length > 0;
+      console.log(
+        `Campus ${campus.code}: hasPrograms = ${hasPrograms}`,
+        campus.available_programs
+      );
+      return true; // Tạm thời cho phép tất cả campuses
+    });
+
+    console.log("Filtered campuses for create dialog:", filtered);
+    return filtered;
+  }, [campuses]);
+
+  const filteredCampusesForEdit = useMemo(() => {
+    // For edit dialog, include all campuses to allow editing existing tuition
+    return campuses;
   }, [campuses]);
 
   // Effects
@@ -430,13 +458,42 @@ export default function TuitionPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
-        <div className="flex items-center space-x-2 mb-2">
-          <DollarSign className="h-6 w-6 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Quản Lý Học Phí</h1>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <DollarSign className="h-6 w-6 text-blue-600" />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Quản Lý Học Phí
+              </h1>
+              <p className="text-gray-600">
+                Quản lý học phí các chương trình đào tạo tại các cơ sở
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              size="sm"
+              disabled={isRefreshing}
+              className="hover:bg-blue-50"
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
+              />
+              Làm mới
+            </Button>
+            <Button
+              onClick={() => setIsCreateDialogOpen(true)}
+              variant="default"
+              size="sm"
+              className="bg-gray-900 hover:bg-gray-800"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Thêm học phí
+            </Button>
+          </div>
         </div>
-        <p className="text-gray-600">
-          Quản lý học phí các chương trình đào tạo tại các cơ sở
-        </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -450,7 +507,7 @@ export default function TuitionPage() {
             tuitionFees={tuitionFees}
             tuitionMeta={tuitionMeta}
             programs={filteredPrograms}
-            campuses={filteredCampuses}
+            campuses={filteredCampusesForList}
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             selectedProgramCode={selectedProgramCode}
@@ -491,7 +548,7 @@ export default function TuitionPage() {
         onOpenChange={setIsCreateDialogOpen}
         onSubmit={handleCreateTuition}
         programs={filteredPrograms}
-        campuses={filteredCampuses}
+        campuses={filteredCampusesForCreate}
         isSubmitting={isSubmitting}
         title="Thêm Học Phí Mới"
         submitText="Tạo Học Phí"
@@ -505,7 +562,7 @@ export default function TuitionPage() {
           editingTuition && handleUpdateTuition(editingTuition.id, data)
         }
         programs={filteredPrograms}
-        campuses={filteredCampuses}
+        campuses={filteredCampusesForEdit}
         isSubmitting={isSubmitting}
         title="Chỉnh Sửa Học Phí"
         submitText="Cập Nhật"
