@@ -2,13 +2,7 @@ import { API_ENDPOINTS } from './constants';
 
 const API_BASE_URL = 'https://core-tuyensinh-production.up.railway.app/api/v1';
 
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: 'student' | 'admin' | 'staff' | 'super_admin';
-  last_login_at: string;
-}
+
 
 export interface LoginRequest {
   email: string;

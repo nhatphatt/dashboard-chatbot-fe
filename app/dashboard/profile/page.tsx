@@ -227,7 +227,11 @@ export default function ProfilePage() {
                     <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       id="last-login"
-                      value={formatDate(user.last_login_at)}
+                      value={
+                        user.last_login_at
+                          ? formatDate(user.last_login_at)
+                          : "Chưa đăng nhập"
+                      }
                       readOnly
                       className="pl-10 bg-gray-50"
                     />
